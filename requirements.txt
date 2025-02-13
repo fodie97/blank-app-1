@@ -1,1 +1,7 @@
 streamlit
+plotly
+streamlit-lottie
+pandas
+requests
+matplotlib
+seaborn
