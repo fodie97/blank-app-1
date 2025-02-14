@@ -3,14 +3,160 @@ import streamlit as st
 import plotly.express as px
 from pathlib import Path
 
-# Configure the page
+# Configure the page - THIS MUST BE THE FIRST STREAMLIT COMMAND
 st.set_page_config(
     page_title="Performance des Centres",
     layout="wide"
 )
 
-st.title("💰 Performance des Centres")
-st.write("Page en construction...")
+# Custom CSS to incorporate Carmila's brand colors and improved styling
+st.markdown("""
+    <style>
+        /* Main theme color - Carmila Red */
+        :root {
+            --carmila-red: #E4002B;
+        }
+        
+        /* Title styling */
+        .css-10trblm {
+            color: var(--carmila-red) !important;
+            font-size: 2.5em !important;
+            font-weight: 700 !important;
+            margin-bottom: 0.5em !important;
+        }
+        
+        /* Subheader styling */
+        .css-1fv8s86 {
+            color: var(--carmila-red) !important;
+            font-size: 1.8em !important;
+            font-weight: 600 !important;
+            margin-bottom: 1em !important;
+        }
+        
+        /* Sidebar styling */
+        .css-1d391kg {
+            background-color: rgba(228, 0, 43, 0.05);
+        }
+        
+        /* Button styling */
+        .stButton>button {
+            background-color: var(--carmila-red);
+            color: white;
+            border: none;
+            padding: 0.5em 1em;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .stButton>button:hover {
+            background-color: #c0001f;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Card styling */
+        .card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--carmila-red);
+        }
+
+        /* Control panel styling */
+        .control-panel {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+            border: 1px solid rgba(228, 0, 43, 0.1);
+        }
+
+        /* Metric container styling */
+        .metric-container {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+            border-top: 3px solid var(--carmila-red);
+        }
+
+        /* Plot styling */
+        .plot-container {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-top: 1rem;
+            border: 1px solid rgba(228, 0, 43, 0.1);
+        }
+
+        /* Select box styling */
+        .stSelectbox {
+            color: #2c3e50;
+        }
+
+        /* Slider styling */
+        .stSlider {
+            color: var(--carmila-red);
+        }
+
+        /* Header styling */
+        .page-header {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: linear-gradient(90deg, rgba(228, 0, 43, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+            border-radius: 10px;
+        }
+
+        /* Divider styling */
+        .divider {
+            height: 3px;
+            background: linear-gradient(90deg, var(--carmila-red) 0%, rgba(228, 0, 43, 0.1) 100%);
+            margin: 2rem 0;
+        }
+
+        /* Table styling */
+        .dataframe {
+            border-collapse: collapse;
+            margin: 1rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .dataframe th {
+            background-color: rgba(228, 0, 43, 0.05);
+            color: #E4002B;
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid rgba(228, 0, 43, 0.1);
+        }
+        
+        .dataframe td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .dataframe tr:hover {
+            background-color: rgba(228, 0, 43, 0.02);
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Add page header
+st.markdown("""
+    <div class="page-header">
+        <h1 style='color: #E4002B; margin-bottom: 0.5rem;'>Performance des Centres</h1>
+        <p style='font-size: 1.2em; color: #666;'>Analysez les indicateurs de performance de chaque centre commercial</p>
+    </div>
+""", unsafe_allow_html=True)
 
 # Définition des chemins
 BASE_DIR = Path(__file__).parent.parent

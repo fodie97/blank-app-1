@@ -1,13 +1,135 @@
+import streamlit as st
 from pathlib import Path
 import pandas as pd
-import streamlit as st
 import plotly.graph_objects as go
 
-# Configure the page
+# Configure the page - THIS MUST BE THE FIRST STREAMLIT COMMAND
 st.set_page_config(
     page_title="Analyse des Flux",
     layout="wide"
 )
+
+# Custom CSS to incorporate Carmila's brand colors and improved styling
+st.markdown("""
+    <style>
+        /* Main theme color - Carmila Red */
+        :root {
+            --carmila-red: #E4002B;
+        }
+        
+        /* Title styling */
+        .css-10trblm {
+            color: var(--carmila-red) !important;
+            font-size: 2.5em !important;
+            font-weight: 700 !important;
+            margin-bottom: 0.5em !important;
+        }
+        
+        /* Subheader styling */
+        .css-1fv8s86 {
+            color: var(--carmila-red) !important;
+            font-size: 1.8em !important;
+            font-weight: 600 !important;
+            margin-bottom: 1em !important;
+        }
+        
+        /* Sidebar styling */
+        .css-1d391kg {
+            background-color: rgba(228, 0, 43, 0.05);
+        }
+        
+        /* Button styling */
+        .stButton>button {
+            background-color: var(--carmila-red);
+            color: white;
+            border: none;
+            padding: 0.5em 1em;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .stButton>button:hover {
+            background-color: #c0001f;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Card styling */
+        .card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--carmila-red);
+        }
+
+        /* Control panel styling */
+        .control-panel {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+            border: 1px solid rgba(228, 0, 43, 0.1);
+        }
+
+        /* Metric container styling */
+        .metric-container {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+            border-top: 3px solid var(--carmila-red);
+        }
+
+        /* Plot styling */
+        .plot-container {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-top: 1rem;
+            border: 1px solid rgba(228, 0, 43, 0.1);
+        }
+
+        /* Select box styling */
+        .stSelectbox {
+            color: #2c3e50;
+        }
+
+        /* Slider styling */
+        .stSlider {
+            color: var(--carmila-red);
+        }
+
+        /* Header styling */
+        .page-header {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: linear-gradient(90deg, rgba(228, 0, 43, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+            border-radius: 10px;
+        }
+
+        /* Divider styling */
+        .divider {
+            height: 3px;
+            background: linear-gradient(90deg, var(--carmila-red) 0%, rgba(228, 0, 43, 0.1) 100%);
+            margin: 2rem 0;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Add page header
+st.markdown("""
+    <div class="page-header">
+        <h1 style='color: #E4002B; margin-bottom: 0.5rem;'>Analyse des Flux</h1>
+        <p style='font-size: 1.2em; color: #666;'>Visualisez et analysez les tendances de fréquentation de vos centres commerciaux</p>
+    </div>
+""", unsafe_allow_html=True)
 
 # Définition du chemin du dossier datasets
 BASE_DIR = Path(__file__).parent.parent
@@ -16,7 +138,8 @@ DATASET_DIR = BASE_DIR / "datasets"
 # Définition des fichiers attendus
 FILES = {
     "Flux_Quotidien": DATASET_DIR / "Entr_es_Data_2023-2025.csv",
-    "Temps_Visite": DATASET_DIR / "temps_visite_moyen.csv"
+    "Temps_Visite": DATASET_DIR / "temps_visite_moyen.csv",
+    "CA_Data": DATASET_DIR / "CA_per_entry_by_mall_and_month.csv"
 }
 
 # Vérification des fichiers manquants
@@ -49,9 +172,14 @@ def load_data():
         # Load temps_visite data
         temps_visite = pd.read_csv(FILES["Temps_Visite"])
         
+        # Load CA data
+        ca_data = pd.read_csv(FILES["CA_Data"])
+        ca_data['Mois'] = pd.to_datetime(ca_data['Mois'])
+        
         return {
             "flux_cc": flux_df,
-            "temps_visite": temps_visite
+            "temps_visite": temps_visite,
+            "ca_data": ca_data
         }
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
@@ -62,6 +190,7 @@ data = load_data()
 # Vérifie si les données sont bien chargées
 flux_cc = data["flux_cc"]
 temps_visite = data["temps_visite"]
+ca_data = data["ca_data"]
 
 # Sidebar for granularity selection
 with st.sidebar:
@@ -184,15 +313,15 @@ def load_event_data():
     
     return avg_impact
 
+# Load event data
+event_data = load_event_data()
+
 # After the granularity selector but before the graph
 event_container = st.container()
 
 with event_container:
     st.markdown("---")
     st.subheader("🎉 Simulation d'événements")
-
-    # Load event data
-    event_data = load_event_data()
 
     # Initialize session state for events if it doesn't exist
     if 'planned_events' not in st.session_state:
@@ -227,13 +356,19 @@ with event_container:
     def add_event():
         if selected_event != 'Aucun événement':
             impact = event_data[event_data['Exceptionnel'] == selected_event]['Impact'].values[0]
+            # Calculate the end of the week for the event date
+            event_date_ts = pd.Timestamp(event_date)
+            end_of_week = event_date_ts + pd.Timedelta(days=(6 - event_date_ts.dayofweek))
+            
             new_event = {
                 'event': selected_event,
-                'date': event_date,
+                'mall': selected_malls[0],  # Use the first selected mall
+                'start_date': event_date,
+                'end_date': end_of_week.date(),
                 'impact': impact
             }
             # Check if event already exists on the same date
-            date_exists = any(e['date'] == event_date for e in st.session_state.planned_events)
+            date_exists = any(e['start_date'] == event_date for e in st.session_state.planned_events)
             if not date_exists:
                 st.session_state.planned_events.append(new_event)
                 st.session_state.show_error = False
@@ -253,7 +388,7 @@ with event_container:
         for idx, event in enumerate(st.session_state.planned_events):
             col1, col2 = st.columns([4, 1])
             with col1:
-                st.markdown(f"**{event['event']}** le {event['date']} (Impact: +{event['impact']:.1f}%)")
+                st.markdown(f"**{event['event']}** le {event['start_date']} (Impact: +{event['impact']:.1f}%)")
             with col2:
                 def delete_event(index):
                     st.session_state.planned_events.pop(index)
@@ -267,16 +402,77 @@ simulated_data = filtered_flux.copy()
 # Apply the impact of all planned events
 for event in st.session_state.planned_events:
     # Calculate the end of the week for the event date
-    event_date_ts = pd.Timestamp(event['date'])
+    event_date_ts = pd.Timestamp(event['start_date'])
     end_of_week = event_date_ts + pd.Timedelta(days=(6 - event_date_ts.dayofweek))
     
     # Apply impact from event date to end of the week
-    mask = (simulated_data['Jour'].dt.date >= event['date']) & \
-           (simulated_data['Jour'].dt.date <= end_of_week.date()) & \
-           (simulated_data['Jour'].dt.year == 2025)
+    mask = (simulated_data['Jour'].dt.date >= event['start_date']) & \
+           (simulated_data['Jour'].dt.date <= event['end_date']) & \
+           (simulated_data['Site'] == event['mall'])
     simulated_data.loc[mask, 'Entrées'] = simulated_data.loc[mask, 'Entrées'] * (1 + event['impact']/100)
 
-# Création du graphique
+# Function to calculate CA
+def calculate_ca(entries_df, ca_per_entry_df):
+    try:
+        entries_df = entries_df.copy()
+        
+        # Use a fixed CA per entry (average from the data)
+        ca_per_entry = 0.6  # Average CA per entry in euros
+        
+        # Calculate CA directly from entries
+        entries_df['CA'] = entries_df['Entrées'] * ca_per_entry
+        
+        return entries_df
+    except Exception as e:
+        st.error(f"Erreur lors du calcul du CA : {str(e)}")
+        return entries_df.assign(CA=0)
+
+# Add CA box under the graph
+def display_ca_box():
+    # Calculate base CA (without events)
+    base_ca = calculate_ca(filtered_flux, ca_data)
+    base_total = base_ca['CA'].sum()
+    
+    # Calculate CA with events impact
+    event_impact_total = 0
+    if st.session_state.planned_events:
+        for event in st.session_state.planned_events:
+            event_mask = (
+                (base_ca['Jour'].dt.date >= event['start_date']) &
+                (base_ca['Jour'].dt.date <= event['end_date']) &
+                (base_ca['Site'] == event['mall'])
+            )
+            
+            # Calculate additional CA from the event
+            affected_entries = base_ca[event_mask]
+            event_impact = (affected_entries['CA'] * (event['impact']/100)).sum()
+            event_impact_total += event_impact
+    
+    # Total CA with events is base CA plus the impact
+    total_with_events = base_total + event_impact_total
+    
+    # Format numbers
+    base_formatted = f"{base_total:,.2f} €"
+    total_formatted = f"{total_with_events:,.2f} €"
+    
+    # Create the box with the information
+    st.markdown("""
+    <div class="metric-container">
+        <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; text-align: center;">
+            <div>
+                <div style="font-size: 16px; margin-bottom: 8px;">CA Base</div>
+                <div style="font-size: 20px; font-weight: bold;">{}</div>
+            </div>
+            <div style="color: #28a745; font-size: 24px;">➜</div>
+            <div>
+                <div style="font-size: 16px; margin-bottom: 8px;">CA avec Événements</div>
+                <div style="font-size: 20px; font-weight: bold;">{}</div>
+            </div>
+        </div>
+    </div>
+    """.format(base_formatted, total_formatted), unsafe_allow_html=True)
+
+# Function to plot the flux data
 def plot_flux(df, simulated_df, gran, events=None):
     if df.empty:
         st.warning("Aucune donnée à afficher pour la sélection actuelle.")
@@ -338,12 +534,12 @@ def plot_flux(df, simulated_df, gran, events=None):
             # Add markers for each event's impact
             if events:
                 for event in events:
-                    event_date_ts = pd.Timestamp(event['date'])
+                    event_date_ts = pd.Timestamp(event['start_date'])
                     end_of_week = event_date_ts + pd.Timedelta(days=(6 - event_date_ts.dayofweek))
                     
                     impacted_data = predicted_data[
-                        (predicted_data["Jour"].dt.date >= event['date']) & 
-                        (predicted_data["Jour"].dt.date <= end_of_week.date())
+                        (predicted_data["Jour"].dt.date >= event['start_date']) & 
+                        (predicted_data["Jour"].dt.date <= event['end_date'])
                     ]
                     
                     if not impacted_data.empty:
@@ -451,10 +647,10 @@ def plot_flux(df, simulated_df, gran, events=None):
         for event in events:
             annotations.append(
                 dict(
-                    x=event['date'],
+                    x=event['start_date'],
                     y=1,
                     yref='paper',
-                    text=f"🎉 {event['event']}<br>(+{event['impact']:.1f}%)",
+                    text=f" {event['event']} (+{event['impact']:.1f}%)",
                     showarrow=True,
                     arrowhead=2,
                     arrowsize=1,
@@ -474,14 +670,16 @@ def plot_flux(df, simulated_df, gran, events=None):
 fig = plot_flux(filtered_flux, simulated_data, granularity, events=st.session_state.planned_events)
 st.plotly_chart(fig, use_container_width=True, config={
     'displayModeBar': True,
-    'scrollZoom': True,
-    'modeBarButtonsToAdd': ['drawline', 'drawopenpath', 'eraseshape']
+    'displaylogo': False
 })
+
+# Display the CA box
+display_ca_box()
 
 # Show impact summary if an event is selected
 if st.session_state.planned_events:
     st.info(f"""
-    💡 **Impact simulé des événements**
+    **Impact simulé des événements**
     """)
 
 # Affichage des KPIs
